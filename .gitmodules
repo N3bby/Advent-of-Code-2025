@@ -1,0 +1,3 @@
+[submodule "input"]
+	path = input
+	url = git@github.com:N3bby/Advent-of-Code-2025-input.git
