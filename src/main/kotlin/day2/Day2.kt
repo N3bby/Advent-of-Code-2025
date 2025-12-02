@@ -18,4 +18,4 @@ fun parseProductIds(input: String): List<ProductId> =
 fun parseProductIdRange(range: String): ProductIdRange =
     range
         .split("-")
-        .let { (start, end) -> return start.toLong()..end.toLong() }
+        .let { (start, end) -> start.toLong()..end.toLong() }
