@@ -1,25 +1,25 @@
 package day3
 
+import ext.maxWithIndex
 import ext.pow
 
-typealias BatteryBank = List<Int>
+typealias BatteryBank = List<Long>
 
 fun parseBatteryBanks(input: String): List<BatteryBank> = input
     .lines()
     .map { line ->
-        line.toCharArray().map { it.digitToInt() }
+        line.toCharArray().map { it.digitToInt().toLong() }
     }
 
 fun BatteryBank.findLargestJoltage(maxTurnedOn: Int = 2): Long {
     val options = dropLast(maxTurnedOn - 1)
-    val max = options.max()
-    val maxIdx = options.indexOf(max)
+    val (max, maxIdx) = options.maxWithIndex()
 
     return if (maxTurnedOn == 1) {
-        max.toLong()
+        max
     } else {
-        val remainingSearchSpace = drop(maxIdx + 1)
-        max.toLong() * 10L.pow(maxTurnedOn - 1) + remainingSearchSpace.findLargestJoltage(maxTurnedOn - 1)
+        val remainingOptions = drop(maxIdx + 1)
+        max * 10L.pow(maxTurnedOn - 1) + remainingOptions.findLargestJoltage(maxTurnedOn - 1)
     }
 }
 

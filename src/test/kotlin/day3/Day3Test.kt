@@ -8,11 +8,11 @@ class Day3KtTest {
 
     @Test
     fun test() {
-        assertThat(listOf(1, 1, 9, 2, 1).findLargestJoltage(4)).isEqualTo(1921)
-        assertThat(listOf(9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1).findLargestJoltage()).isEqualTo(98)
-        assertThat(listOf(8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9).findLargestJoltage()).isEqualTo(89)
-        assertThat(listOf(2, 3, 4, 2, 3, 4, 2, 3, 4, 2, 3, 4, 2, 7, 8).findLargestJoltage()).isEqualTo(78)
-        assertThat(listOf(8, 1, 8, 1, 8, 1, 9, 1, 1, 1, 1, 2, 1, 1, 1).findLargestJoltage()).isEqualTo(92)
+        assertThat(listOf<Long>(1, 1, 9, 2, 1).findLargestJoltage(4)).isEqualTo(1921)
+        assertThat(listOf<Long>(9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1).findLargestJoltage()).isEqualTo(98)
+        assertThat(listOf<Long>(8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9).findLargestJoltage()).isEqualTo(89)
+        assertThat(listOf<Long>(2, 3, 4, 2, 3, 4, 2, 3, 4, 2, 3, 4, 2, 7, 8).findLargestJoltage()).isEqualTo(78)
+        assertThat(listOf<Long>(8, 1, 8, 1, 8, 1, 9, 1, 1, 1, 1, 2, 1, 1, 1).findLargestJoltage()).isEqualTo(92)
     }
 
     @Test

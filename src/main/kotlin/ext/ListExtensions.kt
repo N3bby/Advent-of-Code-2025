@@ -31,3 +31,9 @@ fun <T, R> List<T>.accumulationMap(mapper: (acc: List<T>) -> R): List<R> {
         mapper(take(index + 1))
     }
 }
+
+fun <T : Comparable<T>> Iterable<T>.maxWithIndex(): Pair<T, Int> {
+    return maxOrNull()
+        ?.let { Pair(it, indexOf(it)) }
+        ?: throw NoSuchElementException("Collection is empty")
+}
