@@ -34,7 +34,32 @@ class Day4KtTest {
         assertThat(grid.findReachableRollCount()).isEqualTo(1376)
     }
 
+    @Test
+    fun `part 2 - example input`() {
+        val input = """
+            ..@@.@@@@.
+            @@@.@.@.@@
+            @@@@@.@.@@
+            @.@@@@..@.
+            @@.@@@@.@@
+            .@@@@@@@.@
+            .@.@.@.@@@
+            @.@@@.@@@@
+            .@@@@@@@@.
+            @.@.@@@.@.
+        """.trimIndent()
+        val grid = Grid.fromString(input, GridState::fromChar)
 
+        assertThat(grid.removeMostRollsOfPaper()).isEqualTo(43)
+    }
+
+    @Test
+    fun `part 2 - puzzle input`() {
+        val input = readInput(4)
+        val grid = Grid.fromString(input, GridState::fromChar)
+
+        assertThat(grid.removeMostRollsOfPaper()).isEqualTo(8587)
+    }
 
 }
 
