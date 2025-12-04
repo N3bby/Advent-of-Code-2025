@@ -13,7 +13,7 @@ fun findShortestPath(start: Position, end: Position, bounds: Bounds, blockedTile
     fun getShortestPath(visited: Path = listOf(end)): Path? {
         if (visited.last() == start) return visited
 
-        val neighbourClosestToStart = visited.last().neighbours
+        val neighbourClosestToStart = visited.last().directNeightbours
             .filter { nodes.contains(it) }
             .filter { !visited.contains(it) }
             .minByOrNull { distances[it]!! }
@@ -36,7 +36,7 @@ fun computeDistancesFromStart(start: Position, nodes: Set<Position>): Map<Positi
         if (unvisited.isEmpty() || unvisited.all { distances[it] == Int.MAX_VALUE }) break
 
         val currentNode = unvisited.minBy { position -> distances[position]!! }
-        currentNode.neighbours
+        currentNode.directNeightbours
             .filter { unvisited.contains(it) }
             .forEach { neighbour ->
                 distances[neighbour] = min(

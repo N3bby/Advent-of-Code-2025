@@ -277,7 +277,7 @@ fun <T> Grid<T>.getContiguousGroup(
 ): Set<Position> {
     visited.add(position)
 
-    val positionsToVisit = position.neighbours
+    val positionsToVisit = position.directNeightbours
         .filter { isInBounds(it) }
         .filter { getAtPosition(it) == value }
         .filter { !visited.contains(it) }
