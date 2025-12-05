@@ -42,3 +42,17 @@ fun LongRange.difference(other: LongRange): List<LongRange> {
         listOf(last + 1..other.last)
     }
 }
+
+operator fun LongRange.minus(other: LongRange): List<LongRange> = other.difference(this)
+
+operator fun LongRange.minus(others: List<LongRange>): List<LongRange> {
+    if (others.none { it.overlaps(this) }) return listOf(this)
+
+    val remainingParts = this - others.first()
+    return remainingParts.flatMap { it - others.drop(1) }
+}
+
+fun List<LongRange>.removeOverlaps(): List<LongRange> =
+    fold(emptyList()) { acc, range -> acc + (range - acc) }
+
+fun LongRange.size(): Long = last - first + 1
