@@ -1,6 +1,23 @@
 package day6
 
 import ext.transpose
+import util.Grid
+import util.Region
+import util.getSubGrid
+
+fun Grid<Char>.splitByEmptyColumns(): List<Grid<Char>> {
+    val emptyColumnIndices = this.columns.withIndex()
+        .filter { (_, column) -> column.all { cell -> cell == ' ' } }
+        .map { (index, _) -> index }
+
+    val columnSpans = (listOf(-1 to emptyColumnIndices.first())
+            + emptyColumnIndices.zipWithNext()
+            + listOf(emptyColumnIndices.last() to this.width))
+
+    return columnSpans
+        .map { (minX, maxX) -> Region(minX + 1, maxX, 0, this.height) }
+        .map { getSubGrid(it) }
+}
 
 data class CephalodProblem(val numbers: List<Long>, val operation: Long.(Long) -> Long) {
 
@@ -9,20 +26,23 @@ data class CephalodProblem(val numbers: List<Long>, val operation: Long.(Long) -
     }
 
     companion object {
-        fun from(list: List<String>): CephalodProblem {
-            val numbers = list.dropLast(1).map { it.toLong() }
-            val operation: Long.(Long) -> Long = when (list.last()) {
+        fun fromGrid(grid: Grid<Char>, transposeNumbers: Boolean): CephalodProblem {
+            val numbers = grid.rows.dropLast(1)
+                .let { if (transposeNumbers) it.transpose() else it }
+                .map { it.joinToString(separator = "").trim() }
+                .map { it.toLong() }
+
+            val operatorStr = grid.rows.last().joinToString("").trim()
+            val operation: Long.(Long) -> Long = when (operatorStr) {
                 "+" -> Long::plus
                 "*" -> Long::times
-                else -> throw IllegalArgumentException("Unknown operator: ${list.last()}")
+                else -> throw IllegalArgumentException("Unknown operator: $operatorStr")
             }
 
-            return CephalodProblem(numbers, operation)
-        }
+            return CephalodProblem(numbers, operation)        }
     }
 }
 
-fun parseCaphalodProblems(input: String): List<CephalodProblem> = input.lines()
-    .map { line -> line.split(" ").filter { it.isNotBlank() } }
-    .transpose()
-    .map { CephalodProblem.from(it) }
+fun parseCaphalodProblems(input: String, transposeNumbers: Boolean = false): List<CephalodProblem> = Grid.fromString(input)
+    .splitByEmptyColumns()
+    .map { CephalodProblem.fromGrid(it, transposeNumbers) }
