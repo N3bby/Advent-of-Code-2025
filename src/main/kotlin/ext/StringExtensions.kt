@@ -24,3 +24,9 @@ fun String.reversedPerLine(): String {
 fun String.hasSubstringAt(index: Int, substring: String): Boolean {
     return substring(startIndex = index).startsWith(substring)
 }
+
+fun String.paddedLines(): List<String> {
+    val maxLineLength = lines().maxOf { it.length }
+    return lines()
+        .map { it.padEnd(maxLineLength) }
+}

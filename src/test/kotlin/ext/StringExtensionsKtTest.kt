@@ -1,6 +1,5 @@
 package ext
 
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -59,5 +58,18 @@ class StringExtensionsKtTest {
         assertThat("helloWorld".hasSubstringAt(0, "hello")).isTrue()
         assertThat("123helloWorld".hasSubstringAt(0, "hello")).isFalse()
         assertThat("123helloWorld".hasSubstringAt(3, "hello")).isTrue()
+    }
+
+    @Test
+    fun string_paddedLines() {
+        val input = """
+            abcdef
+            def
+        """.trimIndent()
+
+        assertThat(input.paddedLines()).isEqualTo(listOf(
+            "abcdef",
+            "def   "
+        ))
     }
 }

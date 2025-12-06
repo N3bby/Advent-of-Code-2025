@@ -1,5 +1,6 @@
 package util
 
+import ext.paddedLines
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.awt.image.BufferedImage.TYPE_INT_RGB
@@ -45,6 +46,9 @@ data class Bounds(val width: Int, val height: Int) {
 }
 
 data class Region(val minX: Int, val maxX: Int, val minY: Int, val maxY: Int) {
+    val width get() = maxX - minX
+    val height get() = maxY - minY
+
     fun contains(position: Position): Boolean {
         return position.x in minX until maxX &&
                 position.y in minY until maxY
@@ -146,12 +150,12 @@ data class Grid<T> private constructor(val rows: List<MutableList<T>>) {
         }
 
         fun fromString(input: String): Grid<Char> {
-            val rows = input.lines().map { it.toList() }
+            val rows = input.paddedLines().map { it.toList() }
             return from(rows)
         }
 
         fun <T> fromString(input: String, transform: (Char) -> T): Grid<T> {
-            val rows = input.lines().map { line -> line.toCharArray().map(transform) }
+            val rows = input.paddedLines().map { line -> line.toCharArray().map(transform) }
             return from(rows)
         }
 
@@ -286,3 +290,8 @@ fun <T> Grid<T>.getContiguousGroup(
 
     return visited
 }
+
+fun <T> Grid<T>.getSubGrid(region: Region): Grid<T> =
+    Grid.generate(Bounds(region.width, region.height)) {
+        getAtPosition(it + Offset(region.minX, region.minY))
+    }
