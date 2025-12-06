@@ -15,5 +15,20 @@ class ListExtensionsKtTest {
         )
     }
 
+    @Test
+    fun transpose() {
+        val transposed = listOf(
+            listOf(1, 2, 3),
+            listOf(4, 5, 6)
+        ).transpose()
+
+        assertThat(transposed).isEqualTo(
+            listOf(
+                listOf(1, 4),
+                listOf(2, 5),
+                listOf(3, 6)
+            )
+        )
+    }
 }
 

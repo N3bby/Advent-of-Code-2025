@@ -37,3 +37,11 @@ fun <T : Comparable<T>> Iterable<T>.maxWithIndex(): Pair<T, Int> {
         ?.let { Pair(it, indexOf(it)) }
         ?: throw NoSuchElementException("Collection is empty")
 }
+
+fun <T> List<List<T>>.transpose(): List<List<T>> {
+    assert(all { it.size == first().size }) { "All lists must have the same size" }
+
+    return first().mapIndexed { columnIdx, _ ->
+        mapIndexed { rowIdx, _ -> get(rowIdx)[columnIdx] }
+    }
+}

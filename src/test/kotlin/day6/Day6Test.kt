@@ -2,7 +2,6 @@ package day6
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import util.Grid
 import util.readInput
 
 class Day6KtTest {
@@ -16,9 +15,7 @@ class Day6KtTest {
             *   +   *   +  
         """.trimIndent()
 
-        val grids = Grid.fromString(input).splitByEmptyColumns()
-        val grandTotal = grids
-            .map { CephalodProblem.fromGrid(it) }
+        val grandTotal = parseCaphalodProblems(input)
             .sumOf { it.solve() }
 
         assertThat(grandTotal).isEqualTo(4277556)
@@ -28,12 +25,10 @@ class Day6KtTest {
     fun `part 1 - puzzle input`() {
         val input = readInput(6)
 
-        val grids = Grid.fromString(input).splitByEmptyColumns()
-        val grandTotal = grids
-            .map { CephalodProblem.fromGrid(it) }
+        val grandTotal = parseCaphalodProblems(input)
             .sumOf { it.solve() }
 
-        assertThat(grandTotal).isEqualTo(4277556)
+        assertThat(grandTotal).isEqualTo(6757749566978)
     }
 }
 
