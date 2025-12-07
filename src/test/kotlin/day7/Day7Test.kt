@@ -32,10 +32,7 @@ class Day7KtTest {
             .fromString(input, TachyonManifoldState::fromChar)
             .toManifold()
 
-        val splittersReached = manifold.simulateBeam()
-            .getBeamSplits()
-            .groupBy { it.position }
-            .count()
+        val (simulatedBeam, splittersReached) = manifold.simulateBeam()
 
         assertThat(splittersReached).isEqualTo(21)
     }
@@ -48,12 +45,9 @@ class Day7KtTest {
             .fromString(input, TachyonManifoldState::fromChar)
             .toManifold()
 
-        val splittersReached = manifold.simulateBeam()
-            .getBeamSplits()
-            .groupBy { it.position }
-            .count()
+        val (simulatedBeam, splittersReached) = manifold.simulateBeam()
 
-        assertThat(splittersReached).isEqualTo(21)
+        assertThat(splittersReached).isEqualTo(1579)
     }
 }
 

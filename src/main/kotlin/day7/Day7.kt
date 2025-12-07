@@ -37,14 +37,26 @@ fun Grid<TachyonManifoldState>.toManifold(): TachyonManifold {
     return TachyonManifold(start, splitters, height)
 }
 
+typealias SplittersReached = Int
+
 data class TachyonManifold(val start: Position, val splitters: List<Position>, val manifoldExitDistance: Int) {
-    fun simulateBeam(): TachyonBeamPath {
+    fun simulateBeam(): Pair<TachyonBeamPath, SplittersReached> {
         val startNode = Beam(start, null)
         val leaves = stackOf<TachyonBeamNode>(startNode)
+        val nodes = mutableMapOf<Position, TachyonBeamNode>()
+        var splittersReached = 0
 
-        fun getNextNode(position: Position): TachyonBeamNode = when (position) {
-            in splitters -> BeamSplit(position, null, null)
-            else -> Beam(position, null)
+        fun getNextNode(position: Position): TachyonBeamNode {
+            if (nodes.containsKey(position)) return nodes[position]!!
+
+            val nextNode = when (position) {
+                in splitters -> BeamSplit(position, null, null)
+                else -> Beam(position, null)
+            }
+            leaves.push(nextNode)
+            nodes[position] = nextNode
+
+            return nextNode
         }
 
         while (leaves.isNotEmpty()) {
@@ -53,35 +65,24 @@ data class TachyonManifold(val start: Position, val splitters: List<Position>, v
 
             when (node) {
                 is Beam -> {
-                    getNextNode(node.position + Offset(0, 1)).also {
-                        node.next = it
-                        leaves.push(it)
-                    }
+                    node.next = getNextNode(node.position + Offset(0, 1))
                 }
-
                 is BeamSplit -> {
-                    getNextNode(node.position + Offset(-1, 0)).also {
-                        node.nextLeft = it
-                        leaves.push(it)
-                    }
-                    getNextNode(node.position + Offset(1, 0)).also {
-                        node.nextRight = it
-                        leaves.push(it)
-                    }
+                    splittersReached++
+                    node.nextLeft = getNextNode(node.position + Offset(-1, 0))
+                    node.nextRight = getNextNode(node.position + Offset(1, 0))
                 }
             }
         }
 
-        return startNode
+        return startNode to splittersReached
     }
 }
 
 typealias TachyonBeamPath = TachyonBeamNode
 
-fun TachyonBeamPath.getBeamSplits(): List<BeamSplit> =
-    getNodes().filterIsInstance<BeamSplit>()
-
 sealed class TachyonBeamNode(val position: Position) {
+
     class Beam(position: Position, var next: TachyonBeamNode?) : TachyonBeamNode(position) {
         override fun getNodes(): List<TachyonBeamNode> {
             return listOf(this) + (next?.getNodes() ?: emptyList())
