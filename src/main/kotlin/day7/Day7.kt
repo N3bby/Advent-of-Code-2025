@@ -1,7 +1,7 @@
 package day7
 
 import day7.TachyonBeamNode.Beam
-import day7.TachyonBeamNode.BeamSplit
+import day7.TachyonBeamNode.BeamSplitter
 import ext.stackOf
 import util.Grid
 import util.Offset
@@ -10,8 +10,7 @@ import util.Position
 enum class TachyonManifoldState {
     EMPTY,
     SPLITTER,
-    START,
-    BEAM;
+    START;
 
     companion object {
         fun fromChar(char: Char) = when (char) {
@@ -20,13 +19,6 @@ enum class TachyonManifoldState {
             '^' -> SPLITTER
             else -> throw IllegalArgumentException("Unknown char: $char")
         }
-    }
-
-    override fun toString(): String = when (this) {
-        EMPTY -> "."
-        SPLITTER -> "^"
-        START -> "S"
-        BEAM -> "|"
     }
 }
 
@@ -37,20 +29,18 @@ fun Grid<TachyonManifoldState>.toManifold(): TachyonManifold {
     return TachyonManifold(start, splitters, height)
 }
 
-typealias SplittersReached = Int
-
 data class TachyonManifold(val start: Position, val splitters: List<Position>, val manifoldExitDistance: Int) {
-    fun simulateBeam(): Pair<TachyonBeamPath, SplittersReached> {
+    fun simulateBeam(): TachyonBeamPath {
         val startNode = Beam(start, null)
         val leaves = stackOf<TachyonBeamNode>(startNode)
         val nodes = mutableMapOf<Position, TachyonBeamNode>()
-        var splittersReached = 0
 
-        fun getNextNode(position: Position): TachyonBeamNode {
+        fun createNextNode(position: Position): TachyonBeamNode {
+            // Use cache to avoid traversing the same path multiple times
             if (nodes.containsKey(position)) return nodes[position]!!
 
             val nextNode = when (position) {
-                in splitters -> BeamSplit(position, null, null)
+                in splitters -> BeamSplitter(position, null, null)
                 else -> Beam(position, null)
             }
             leaves.push(nextNode)
@@ -65,17 +55,17 @@ data class TachyonManifold(val start: Position, val splitters: List<Position>, v
 
             when (node) {
                 is Beam -> {
-                    node.next = getNextNode(node.position + Offset(0, 1))
+                    node.next = createNextNode(node.position + Offset(0, 1))
                 }
-                is BeamSplit -> {
-                    splittersReached++
-                    node.nextLeft = getNextNode(node.position + Offset(-1, 0))
-                    node.nextRight = getNextNode(node.position + Offset(1, 0))
+
+                is BeamSplitter -> {
+                    node.nextLeft = createNextNode(node.position + Offset(-1, 0))
+                    node.nextRight = createNextNode(node.position + Offset(1, 0))
                 }
             }
         }
 
-        return startNode to splittersReached
+        return startNode
     }
 }
 
@@ -83,33 +73,25 @@ typealias TachyonBeamPath = TachyonBeamNode
 
 sealed class TachyonBeamNode(val position: Position) {
 
-    class Beam(position: Position, var next: TachyonBeamNode?) : TachyonBeamNode(position) {
-        override fun getNodes(): List<TachyonBeamNode> {
-            return listOf(this) + (next?.getNodes() ?: emptyList())
-        }
+    abstract val paths: Lazy<Long>
+    abstract val splitters: Lazy<Set<BeamSplitter>>
 
+    class Beam(position: Position, var next: TachyonBeamNode?) : TachyonBeamNode(position) {
         override val paths = lazy {
-            if(next == null) {
-                1
-            } else {
-                next!!.paths.value
-            }
+            if (next == null) 1 else next!!.paths.value
+        }
+        override val splitters = lazy {
+            if (next == null) emptySet() else next!!.splitters.value
         }
     }
 
-    class BeamSplit(position: Position, var nextLeft: TachyonBeamNode?, var nextRight: TachyonBeamNode?) : TachyonBeamNode(position) {
-        override fun getNodes(): List<TachyonBeamNode> {
-            return (listOf(this)
-                    + (nextLeft?.getNodes() ?: emptyList())
-                    + (nextRight?.getNodes() ?: emptyList()))
-        }
-
+    class BeamSplitter(position: Position, var nextLeft: TachyonBeamNode?, var nextRight: TachyonBeamNode?) : TachyonBeamNode(position) {
         override val paths = lazy {
             nextLeft!!.paths.value + nextRight!!.paths.value
         }
+        override val splitters = lazy {
+            setOf(this) + nextLeft!!.splitters.value + nextRight!!.splitters.value
+        }
     }
 
-    abstract fun getNodes(): List<TachyonBeamNode>
-
-    abstract val paths: Lazy<Long>
 }

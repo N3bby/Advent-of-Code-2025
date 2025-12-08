@@ -32,9 +32,10 @@ class Day7KtTest {
             .fromString(input, TachyonManifoldState::fromChar)
             .toManifold()
 
-        val (simulatedBeam, splittersReached) = manifold.simulateBeam()
+        val simulatedBeam = manifold.simulateBeam()
+        val reachedSplitters = simulatedBeam.splitters.value.size
 
-        assertThat(splittersReached).isEqualTo(21)
+        assertThat(reachedSplitters).isEqualTo(21)
     }
 
     @Test
@@ -45,9 +46,10 @@ class Day7KtTest {
             .fromString(input, TachyonManifoldState::fromChar)
             .toManifold()
 
-        val (simulatedBeam, splittersReached) = manifold.simulateBeam()
+        val simulatedBeam = manifold.simulateBeam()
+        val reachedSplitters = simulatedBeam.splitters.value.size
 
-        assertThat(splittersReached).isEqualTo(1579)
+        assertThat(reachedSplitters).isEqualTo(1579)
     }
 
     @Test
@@ -75,7 +77,7 @@ class Day7KtTest {
             .fromString(input, TachyonManifoldState::fromChar)
             .toManifold()
 
-        val (simulatedBeam, _) = manifold.simulateBeam()
+        val simulatedBeam = manifold.simulateBeam()
         val timelines = simulatedBeam.paths.value
 
         assertThat(timelines).isEqualTo(40)
@@ -89,7 +91,7 @@ class Day7KtTest {
             .fromString(input, TachyonManifoldState::fromChar)
             .toManifold()
 
-        val (simulatedBeam, _) = manifold.simulateBeam()
+        val simulatedBeam = manifold.simulateBeam()
         val timelines = simulatedBeam.paths.value
 
         assertThat(timelines).isEqualTo(13418215871354)
