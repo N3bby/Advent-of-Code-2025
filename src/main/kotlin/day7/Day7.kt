@@ -87,6 +87,14 @@ sealed class TachyonBeamNode(val position: Position) {
         override fun getNodes(): List<TachyonBeamNode> {
             return listOf(this) + (next?.getNodes() ?: emptyList())
         }
+
+        override val paths = lazy {
+            if(next == null) {
+                1
+            } else {
+                next!!.paths.value
+            }
+        }
     }
 
     class BeamSplit(position: Position, var nextLeft: TachyonBeamNode?, var nextRight: TachyonBeamNode?) : TachyonBeamNode(position) {
@@ -95,7 +103,13 @@ sealed class TachyonBeamNode(val position: Position) {
                     + (nextLeft?.getNodes() ?: emptyList())
                     + (nextRight?.getNodes() ?: emptyList()))
         }
+
+        override val paths = lazy {
+            nextLeft!!.paths.value + nextRight!!.paths.value
+        }
     }
 
     abstract fun getNodes(): List<TachyonBeamNode>
+
+    abstract val paths: Lazy<Long>
 }
