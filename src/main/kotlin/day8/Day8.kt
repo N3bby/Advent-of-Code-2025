@@ -19,13 +19,9 @@ fun getCircuits(junctionBoxes: List<JunctionBox>, connectionsToMake: Int): List<
     val nShortestConnections = junctionBoxPairs
         .sortedBy { (first, second) -> first.distanceFrom(second) }
         .take(connectionsToMake)
-    println("Found $connectionsToMake shortest connections")
 
     val unionFind = unionFindOf(nShortestConnections)
-    println("Created union find")
-
-    val circuits = unionFind.getGroups(junctionBoxes.toSet())
-    println("Found groups")
+    val circuits = unionFind.getGroups(junctionBoxes)
 
     return circuits
 }

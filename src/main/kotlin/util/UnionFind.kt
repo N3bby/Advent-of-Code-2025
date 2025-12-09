@@ -22,7 +22,7 @@ class UnionFind<T> {
 
     fun unionAll(values: List<Pair<T, T>>) = values.forEach { union(it) }
 
-    fun getGroups(values: Set<T>): List<List<T>> {
+    fun getGroups(values: List<T>): List<List<T>> {
         return values
             .groupBy { findRepresentative(it) }
             .values
