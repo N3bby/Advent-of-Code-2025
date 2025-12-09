@@ -12,6 +12,9 @@ fun <T> List<Pair<T, T>>.removeDuplicates(): List<Pair<T, T>> {
     }
 }
 
+fun <T> List<Pair<T, T>>.allValues(): Set<T> =
+    flatMap { (first, second) -> listOf(first, second) }.toSet()
+
 fun integerSequence(): Sequence<Int> {
     return generateSequence(0) { it + 1 }
 }
