@@ -3,13 +3,22 @@ package util
 import ext.swap
 
 fun <T> cartesianProduct(list1: List<T>, list2: List<T>): List<Pair<T, T>> {
-    return list1.flatMap { a -> list2.map { b -> a to b } }
+    val result = ArrayList<Pair<T, T>>(list1.size * list2.size)
+    for (a in list1) {
+        for (b in list2) {
+            result.add(a to b)
+        }
+    }
+    return result
 }
 
 fun <T> List<Pair<T, T>>.removeDuplicates(): List<Pair<T, T>> {
-    return this.fold(emptyList<Pair<T, T>>()) { acc, pair ->
-        if (pair !in acc && pair.swap() !in acc) acc + pair else acc
+    val result = HashSet<Pair<T, T>>(size)
+    for (pair in this) {
+        if(pair.first == pair.second) continue
+        if (pair !in result && pair.swap() !in result) result.add(pair)
     }
+    return result.toList()
 }
 
 fun <T> List<Pair<T, T>>.allValues(): Set<T> =

@@ -1,11 +1,9 @@
 package day8
 
+import ext.multiplicationOf
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import util.Position3D
-import util.allValues
-import util.cartesianProduct
-import util.removeDuplicates
+import util.readInput
 
 class Day8KtTest {
 
@@ -34,26 +32,36 @@ class Day8KtTest {
             425,690,689
         """.trimIndent()
 
-        val junctionBoxes = input.lines()
-            .map { it.split(",").map(String::toInt) }
-            .map { (x, y, z) -> Position3D(x, y, z) }
+        val junctionBoxes = parseJunctionBoxes(input)
+        val circuits = getCircuits(junctionBoxes, 10)
 
-        val pairs = cartesianProduct(junctionBoxes, junctionBoxes)
-            .filter { it.first != it.second }
-            .removeDuplicates()
+        assertThat(circuits.size).isEqualTo(11)
+        assertThat(circuits.ofSize(5).count()).isEqualTo(1)
+        assertThat(circuits.ofSize(4).count()).isEqualTo(1)
+        assertThat(circuits.ofSize(2).count()).isEqualTo(2)
+        assertThat(circuits.ofSize(1).count()).isEqualTo(7)
 
-        val tenShortestConnections = pairs
-            .sortedBy { (first, second) -> first.distanceFrom(second) }
-            .take(10)
+        val result = circuits
+            .sortedByDescending { it.size }
+            .take(3)
+            .multiplicationOf { it.size }
 
-        val unionFind = UnionFind.fromPairs(tenShortestConnections)
-        val groups = unionFind.getGroups(pairs.allValues())
+        assertThat(result).isEqualTo(40)
+    }
 
-        assertThat(groups.size).isEqualTo(11)
-        assertThat(groups.filter { it.size == 5 }.size).isEqualTo(1)
-        assertThat(groups.filter { it.size == 4 }.size).isEqualTo(1)
-        assertThat(groups.filter { it.size == 2 }.size).isEqualTo(2)
-        assertThat(groups.filter { it.size == 1 }.size).isEqualTo(7)
+    @Test
+    fun `part 1 - puzzle input`() {
+        val input = readInput(8)
+
+        val junctionBoxes = parseJunctionBoxes(input)
+        val circuits = getCircuits(junctionBoxes, 1000)
+
+        val result = circuits
+            .sortedByDescending { it.size }
+            .take(3)
+            .multiplicationOf { it.size }
+
+        assertThat(result).isEqualTo(46398)
     }
 
 }

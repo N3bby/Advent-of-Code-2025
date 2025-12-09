@@ -1,40 +1,33 @@
 package day8
 
-import util.allValues
+import util.Position3D
+import util.cartesianProduct
+import util.removeDuplicates
+import util.unionFindOf
 
-class UnionFind<T>(values: Set<T>) {
+typealias JunctionBox = Position3D
+typealias Circuit = List<JunctionBox>
 
-    val representatives = values
-        .associateWith { it }
-        .toMutableMap()
+fun parseJunctionBoxes(input: String): List<JunctionBox> = input
+    .lines()
+    .map { it.split(",").map(String::toInt) }
+    .map { (x, y, z) -> Position3D(x, y, z) }
 
-    tailrec fun findRepresentative(value: T): T {
-        val representativeOfValue = representatives[value] ?: value
+fun getCircuits(junctionBoxes: List<JunctionBox>, connectionsToMake: Int): List<List<JunctionBox>> {
+    val junctionBoxPairs = cartesianProduct(junctionBoxes, junctionBoxes).removeDuplicates()
 
-        return if (representativeOfValue == value) value else findRepresentative(representativeOfValue)
-    }
+    val nShortestConnections = junctionBoxPairs
+        .sortedBy { (first, second) -> first.distanceFrom(second) }
+        .take(connectionsToMake)
+    println("Found $connectionsToMake shortest connections")
 
-    fun union(values: Pair<T, T>) {
-        val firstRepresentative = findRepresentative(values.first)
-        val secondRepresentative = findRepresentative(values.second)
+    val unionFind = unionFindOf(nShortestConnections)
+    println("Created union find")
 
-        representatives[firstRepresentative] = secondRepresentative
-    }
+    val circuits = unionFind.getGroups(junctionBoxes.toSet())
+    println("Found groups")
 
-    fun unionAll(values: List<Pair<T, T>>) = values.forEach { union(it) }
-
-    fun getGroups(values: Set<T>): Collection<List<T>> {
-        return values
-            .groupBy { findRepresentative(it) }
-            .values
-    }
-
-    companion object {
-        fun <T> fromPairs(pairs: List<Pair<T, T>>): UnionFind<T> {
-            val unionFind = UnionFind(pairs.allValues())
-            unionFind.unionAll(pairs)
-            return unionFind
-        }
-    }
-
+    return circuits
 }
+
+fun List<Circuit>.ofSize(size: Int): List<Circuit> = filter { it.size == size }
