@@ -1,10 +1,11 @@
 package util
 
+import util.Line.Companion.lineOf
 import kotlin.math.abs
-import kotlin.math.max
-import kotlin.math.min
 
 data class LongPosition(val x: Long, val y: Long)
+
+data class DoublePosition(val x: Double, val y: Double)
 
 data class Position(val x: Int, val y: Int) : Comparable<Position> {
     operator fun plus(offset: Offset): Position {
@@ -67,23 +68,100 @@ data class Position(val x: Int, val y: Int) : Comparable<Position> {
     }
 }
 
-data class Line(val pos1: Position, val pos2: Position) {
 
-    val manhattanDistance: Int get() = pos1.manhattanDistanceFrom(pos2)
+// TODO: Always include ends
+// But do NOT count an intersection when the starting point of the line lies on it
+sealed class Line(val pos1: Position, val pos2: Position) {
 
-    fun crossesX(x: Int): Boolean {
-        return x in (min(pos1.x, pos2.x)..max(pos1.x, pos2.x))
+    abstract fun intersects(other: Line): Boolean
+    abstract fun contains(position: Position): Boolean
+
+    class HorizontalLine(pos1: Position, pos2: Position) : Line(pos1, pos2) {
+
+        private val minX = minOf(pos1.x, pos2.x)
+        private val maxX = maxOf(pos1.x, pos2.x)
+
+        val y = pos1.y
+
+        fun getXRange(): IntRange = minX..maxX
+
+        override fun intersects(other: Line): Boolean = when {
+            pos1 == other.pos1 || pos2 == other.pos2 || pos1 == other.pos2 -> false
+            other is HorizontalLine -> false
+            other is VerticalLine -> {
+                val intersectsHorizontally = other.x in getXRange()
+                val intersectsVertically = y in other.getYRange()
+                intersectsVertically && intersectsHorizontally
+            }
+            else -> TODO("Not possible")
+        }
+
+        override fun contains(position: Position): Boolean {
+            return position.x in getXRange() && position.y == y
+        }
     }
 
-    fun crossesY(y: Int): Boolean {
-        return y in (min(pos1.y, pos2.y)..max(pos1.y, pos2.y))
+    class VerticalLine(pos1: Position, pos2: Position) : Line(pos1, pos2) {
+
+        val minY = minOf(pos1.y, pos2.y)
+        val maxY = maxOf(pos1.y, pos2.y)
+
+        val x = pos1.x
+
+        fun getYRange(): IntRange = minY..maxY
+
+        override fun intersects(other: Line): Boolean = when {
+            pos1 == other.pos1 || pos2 == other.pos2 || pos1 == other.pos2 -> false
+            other is VerticalLine -> false
+            other is HorizontalLine -> {
+                val intersectsVertically = other.y in getYRange()
+                val intersectsHorizontally = x in other.getXRange()
+                intersectsVertically && intersectsHorizontally
+            }
+            else -> TODO("Not possible")
+        }
+
+        override fun contains(position: Position): Boolean {
+            return position.y in getYRange() && position.x == x
+        }
     }
+
+    companion object {
+        fun lineOf(pos1: Position, pos2: Position): Line = when {
+            pos1.x == pos2.x -> VerticalLine(pos1, pos2)
+            pos1.y == pos2.y -> HorizontalLine(pos1, pos2)
+            else -> throw IllegalArgumentException("No support for diagonal lines atm")
+        }
+    }
+}
+
+data class Rectangle(val corner1: Position, val corner2: Position) {
+
+    val allCorners = listOf(
+        corner1,
+        Position(corner2.x, corner1.y),
+        corner2,
+        Position(corner1.x, corner2.y),
+    )
+
+    val edges = (allCorners.zipWithNext() + (allCorners.last() to allCorners.first()))
+        .map { lineOf(it.first, it.second) }
+
+    val area: Long
+        get() {
+            val (width, height) = (corner1 - corner2).abs() + Offset(1, 1)
+            return width.toLong() * height.toLong()
+        }
 
 }
 
 data class Offset(val x: Int, val y: Int) {
     fun abs(): Offset {
         return Offset(abs(x), abs(y))
+    }
+
+    operator fun plus(other: Offset): Offset {
+        return Offset(x + other.x, y + other.y)
     }
 }
 

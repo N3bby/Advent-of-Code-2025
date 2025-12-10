@@ -50,8 +50,13 @@ data class Region(val minX: Int, val maxX: Int, val minY: Int, val maxY: Int) {
     val height get() = maxY - minY
 
     fun contains(position: Position): Boolean {
-        return position.x in minX until maxX &&
-                position.y in minY until maxY
+        return position.x in minX .. maxX &&
+                position.y in minY .. maxY
+    }
+
+    fun contains(position: DoublePosition): Boolean {
+        return position.x >= minX.toDouble() && position.x <= maxX.toDouble() &&
+                position.y >= minY.toDouble() && position.y <= maxY.toDouble()
     }
 }
 
