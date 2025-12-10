@@ -33,3 +33,5 @@ class UnionFind<T> {
 
 fun <T> unionFindOf(pairs: List<Pair<T, T>>): UnionFind<T> =
     UnionFind<T>().also { it.unionAll(pairs) }
+
+fun <T> unionFindOf(): UnionFind<T> = UnionFind()
