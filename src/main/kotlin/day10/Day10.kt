@@ -1,5 +1,10 @@
 package day10
 
+import ext.transpose
+import org.apache.commons.math3.optim.MaxIter
+import org.apache.commons.math3.optim.linear.*
+import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
+
 fun String.removeParentheses(): String = this.replace(Regex("[\\[\\]{}()]"), "")
 
 fun parseIndicators(input: String): List<Boolean> = input
@@ -52,47 +57,74 @@ data class Machine(
         return null
     }
 
-    private val buttonOrderCache = mutableMapOf<ButtonOrder, List<Int>>()
-
-    // I'm not sure this will work
-    // You need to sorta combine joltages from the cache with the current count
-    // And you also need to eliminate paths which you know for sure won't help anymore
-    // Maybe some sort of breadth first search where you can eliminate branches or a queue system
-    fun applyButtonPressesForJoltage(
-        fullButtonOrder: ButtonOrder,
-        buttonOrder: ButtonOrder,
-        joltages: List<Int> = MutableList(joltageRequirements.size) { 0 },
-        buttonPresses: Int = 0,
-    ): ReachedStateAfter? {
-        if (buttonOrderCache.contains(buttonOrder)) {
-
-            return buttonPresses + buttonOrderCache[fullButtonOrder]!!.indexOfFirst(joltages::contains)
-        }
-        if (buttonOrder.isEmpty()) return null
-
-        val newJoltages = joltages.toMutableList()
-        buttonOrder.first().forEach { newJoltages[it]++ }
-
-        if (newJoltages == joltageRequirements) {
-            buttonOrderCache[fullButtonOrder] = newJoltages
-            return buttonPresses + 1
-        }
-
-        val reachedAfter =
-            applyButtonPressesForJoltage(fullButtonOrder, buttonOrder.drop(1), newJoltages, buttonPresses + 1)
-        if(reachedAfter)
-        return reachedAfter
-    }
-
     fun getFewestButtonPressesForIndicators(): Int = buttons
         .generateAllPermutations()
         .first { applyButtonPressesForIndicators(it) !== null }
         .let { applyButtonPressesForIndicators(it)!! }
 
-    fun getFewestButtonPressesForJoltage(): Int = buttons
-        .generateAllPermutations(Int.MAX_VALUE, true)
-        .first { applyButtonPressesForJoltage(it, it) !== null }
-        .let { applyButtonPressesForJoltage(it, it)!! }
+    // Using a constraint solver (with a lot of help from Claude)
+    // I should try and figure out how this works exactly
+    // And then I'll have to try and map our Machine to these inputs
+    // And hopefully this runs fast enough...
+
+    fun getFewestButtonPressesForJoltageLA(): Int {
+        val coefficients = buttons
+            .map { button -> joltageRequirements.mapIndexed { idx, _ -> if (idx in button) 1.0 else 0.0 } }
+            .transpose()
+            .map { it.toDoubleArray() }
+            .toTypedArray()
+        val constants = joltageRequirements
+            .map { it.toDouble() }
+            .toDoubleArray()
+
+        val solution = solveMinimizingSum(coefficients, constants)
+            ?: throw Error("No solution found")
+
+        return solution.sum().toInt()
+    }
+}
+
+fun solveMinimizingSum(
+    coefficients: Array<DoubleArray>,
+    constants: DoubleArray,
+): DoubleArray? {
+    try {
+        // Objective: minimize a + b + c + d
+        // All coefficients are 1 for the sum
+        val objectiveCoefficients = DoubleArray(coefficients[0].size) { 1.0 }
+        val objective = LinearObjectiveFunction(objectiveCoefficients, 0.0)
+
+        // Constraints: Ax = b (equality constraints)
+        val constraints = mutableListOf<LinearConstraint>()
+        for (i in coefficients.indices) {
+            constraints.add(
+                LinearConstraint(
+                    coefficients[i],
+                    Relationship.EQ,
+                    constants[i]
+                )
+            )
+        }
+
+        // Optional: Add non-negativity constraints
+        for (i in coefficients[0].indices) {
+            val constraint = DoubleArray(coefficients[0].size) { j -> if (i == j) 1.0 else 0.0 }
+            constraints.add(LinearConstraint(constraint, Relationship.GEQ, 0.0))
+        }
+
+        val solver = SimplexSolver()
+        val solution = solver.optimize(
+            objective,
+            LinearConstraintSet(constraints),
+            GoalType.MINIMIZE,
+            MaxIter(1e6.toInt())
+        )
+
+        return solution.point
+    } catch (e: Exception) {
+        println("Error solving: ${e.message}")
+        return null
+    }
 }
 
 fun <T> List<T>.generateAllPermutations(maxSize: Int = size, allowRepetition: Boolean = false): Sequence<List<T>> =

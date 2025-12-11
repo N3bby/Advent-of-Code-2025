@@ -39,8 +39,30 @@ class Day10KtTest {
         """.trimIndent()
 
         val machines = parseMachines(input)
-        val fewestButtonPressesForAllMachines = machines.sumOf { it.getFewestButtonPressesForJoltage() }
+        val fewestButtonPressesForAllMachines = machines.sumOf { it.getFewestButtonPressesForJoltageLA() }
 
+        assertThat(fewestButtonPressesForAllMachines).isEqualTo(33)
+    }
+
+    @Test
+    fun `part 2 - simplified input`() {
+        val input = """
+            [...] (0,1) (1,2) (0) (2) {2,2,2}
+        """.trimIndent()
+
+        val machine = parseMachines(input).first()
+
+        assertThat(machine.getFewestButtonPressesForJoltageLA()).isEqualTo(4)
+    }
+
+    @Test
+    fun `part 2 - puzzle input`() {
+        val input = readInput(10)
+
+        val machines = parseMachines(input)
+        val fewestButtonPressesForAllMachines = machines.sumOf { it.getFewestButtonPressesForJoltageLA() }
+
+        // Too low: 18341
         assertThat(fewestButtonPressesForAllMachines).isEqualTo(33)
     }
 }
