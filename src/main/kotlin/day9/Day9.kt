@@ -26,8 +26,6 @@ class Polygon(private val corners: List<Position>) {
         .map { lineOf(it.first, it.second) }
 
     fun contains(position: Position): Boolean {
-        if (edges.any { it.contains(position) }) return true
-
         val ray = lineOf(position, Position(xOutsideOfPolygon, position.y))
         val intersections = edges.count { ray.intersects(it) }
 
@@ -41,7 +39,7 @@ class Polygon(private val corners: List<Position>) {
     fun findFullyContainedRectangles(rectangles: List<Rectangle>): List<Rectangle> = rectangles
         .parallelStream()
         .filter { rectangle -> rectangle.allCorners.all { this.contains(it) } }
-        .filter { rectangle -> this.corners.none { rectangle.contains(it) } }
+        .filter { rectangle -> this.corners.none { rectangle.strictlyContains(it) } }
         .filter { rectangle -> rectangle.edges.none { this.intersects(it) } }
         .toList()
 

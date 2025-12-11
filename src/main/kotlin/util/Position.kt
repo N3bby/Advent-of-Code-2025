@@ -68,17 +68,11 @@ data class Position(val x: Int, val y: Int) : Comparable<Position> {
     }
 }
 
-
-// TODO: Always include ends
-// But do NOT count an intersection when the starting point of the line lies on it
 sealed class Line(val pos1: Position, val pos2: Position) {
 
+    /** This does not count "grazing" or collinear lines as intersecting */
     abstract fun intersects(other: Line): Boolean
     abstract fun contains(position: Position): Boolean
-
-    fun sharesPointWith(other: Line): Boolean {
-        return pos1 == other.pos1 || pos1 == other.pos2 || pos2 == other.pos1 || pos2 == other.pos2
-    }
 
     class HorizontalLine(pos1: Position, pos2: Position) : Line(pos1, pos2) {
 
@@ -89,16 +83,13 @@ sealed class Line(val pos1: Position, val pos2: Position) {
 
         fun getXRange(): IntRange = minX + 1..<maxX
 
-        override fun intersects(other: Line): Boolean = when {
-            sharesPointWith(other) -> false
-            other is HorizontalLine -> false
-            other is VerticalLine -> {
+        override fun intersects(other: Line): Boolean = when (other) {
+            is HorizontalLine -> false
+            is VerticalLine -> {
                 val intersectsHorizontally = other.x in getXRange()
                 val intersectsVertically = y in other.getYRange()
                 intersectsVertically && intersectsHorizontally
             }
-
-            else -> TODO("Not possible")
         }
 
         override fun contains(position: Position): Boolean {
@@ -108,23 +99,20 @@ sealed class Line(val pos1: Position, val pos2: Position) {
 
     class VerticalLine(pos1: Position, pos2: Position) : Line(pos1, pos2) {
 
-        val minY = minOf(pos1.y, pos2.y)
-        val maxY = maxOf(pos1.y, pos2.y)
+        private val minY = minOf(pos1.y, pos2.y)
+        private val maxY = maxOf(pos1.y, pos2.y)
 
         val x = pos1.x
 
         fun getYRange(): IntRange = minY + 1..<maxY
 
-        override fun intersects(other: Line): Boolean = when {
-            sharesPointWith(other) -> false
-            other is VerticalLine -> false
-            other is HorizontalLine -> {
+        override fun intersects(other: Line): Boolean = when (other) {
+            is VerticalLine -> false
+            is HorizontalLine -> {
                 val intersectsVertically = other.y in getYRange()
                 val intersectsHorizontally = x in other.getXRange()
                 intersectsVertically && intersectsHorizontally
             }
-
-            else -> TODO("Not possible")
         }
 
         override fun contains(position: Position): Boolean {
@@ -143,6 +131,13 @@ sealed class Line(val pos1: Position, val pos2: Position) {
 
 data class Rectangle(val corner1: Position, val corner2: Position) {
 
+    val bounds = Region(
+        minOf(corner1.x, corner2.x),
+        maxOf(corner1.x, corner2.x),
+        minOf(corner1.y, corner2.y),
+        maxOf(corner1.y, corner2.y)
+    )
+
     val allCorners = listOf(
         corner1,
         Position(corner2.x, corner1.y),
@@ -159,13 +154,8 @@ data class Rectangle(val corner1: Position, val corner2: Position) {
             return width.toLong() * height.toLong()
         }
 
-    fun contains(position: Position): Boolean {
-        val minX = minOf(corner1.x, corner2.x)
-        val maxX = maxOf(corner1.x, corner2.x)
-        val minY = minOf(corner1.y, corner2.y)
-        val maxY = maxOf(corner1.y, corner2.y)
-
-        return position.x in minX + 1..<maxX && position.y in minY + 1..<maxY
+    fun strictlyContains(position: Position): Boolean {
+        return position.x in bounds.minX + 1..<bounds.maxX && position.y in bounds.minY + 1..<bounds.maxY
     }
 
 }
