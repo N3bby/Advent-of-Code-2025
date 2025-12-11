@@ -1,9 +1,10 @@
 package day10
 
 import ext.transpose
-import org.apache.commons.math3.optim.MaxIter
-import org.apache.commons.math3.optim.linear.*
-import org.apache.commons.math3.optim.nonlinear.scalar.GoalType
+import org.ojalgo.optimisation.ExpressionsBasedModel
+import org.ojalgo.optimisation.Optimisation
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 fun String.removeParentheses(): String = this.replace(Regex("[\\[\\]{}()]"), "")
 
@@ -62,69 +63,84 @@ data class Machine(
         .first { applyButtonPressesForIndicators(it) !== null }
         .let { applyButtonPressesForIndicators(it)!! }
 
-    // Using a constraint solver (with a lot of help from Claude)
-    // I should try and figure out how this works exactly
-    // And then I'll have to try and map our Machine to these inputs
-    // And hopefully this runs fast enough...
-
-    fun getFewestButtonPressesForJoltageLA(): Int {
-        val coefficients = buttons
+    /**
+     * I had to throw in the towel on this one. This solution is generated using AI (with multiple back-and-forth steps)
+     * The problem goes far beyond my own skill-set.
+     * I understand the general concept of what is happening, but the details are honestly too complex for me.
+     * */
+    // Integer Linear Programming version using ojAlgo
+    // Minimises sum of button presses with Ax = b and x ∈ Z>=0
+    fun getFewestButtonPressesForJoltageILP(): Int {
+        val a = buttons
             .map { button -> joltageRequirements.mapIndexed { idx, _ -> if (idx in button) 1.0 else 0.0 } }
             .transpose()
             .map { it.toDoubleArray() }
             .toTypedArray()
-        val constants = joltageRequirements
-            .map { it.toDouble() }
-            .toDoubleArray()
+        val b = joltageRequirements.map { it.toDouble() }.toDoubleArray()
 
-        val solution = solveMinimizingSum(coefficients, constants)
-            ?: throw Error("No solution found")
-
-        return solution.sum().toInt()
+        return fewestPressesILP(a, b)
     }
 }
 
-fun solveMinimizingSum(
-    coefficients: Array<DoubleArray>,
-    constants: DoubleArray,
-): DoubleArray? {
-    try {
-        // Objective: minimize a + b + c + d
-        // All coefficients are 1 for the sum
-        val objectiveCoefficients = DoubleArray(coefficients[0].size) { 1.0 }
-        val objective = LinearObjectiveFunction(objectiveCoefficients, 0.0)
+// ojAlgo ILP helper: minimise sum(x) s.t. A x = b, x integer >= 0
+fun fewestPressesILP(A: Array<DoubleArray>, b: DoubleArray): Int {
+    val n = A[0].size
+    val m = A.size
+    val model = ExpressionsBasedModel()
 
-        // Constraints: Ax = b (equality constraints)
-        val constraints = mutableListOf<LinearConstraint>()
-        for (i in coefficients.indices) {
-            constraints.add(
-                LinearConstraint(
-                    coefficients[i],
-                    Relationship.EQ,
-                    constants[i]
-                )
-            )
-        }
-
-        // Optional: Add non-negativity constraints
-        for (i in coefficients[0].indices) {
-            val constraint = DoubleArray(coefficients[0].size) { j -> if (i == j) 1.0 else 0.0 }
-            constraints.add(LinearConstraint(constraint, Relationship.GEQ, 0.0))
-        }
-
-        val solver = SimplexSolver()
-        val solution = solver.optimize(
-            objective,
-            LinearConstraintSet(constraints),
-            GoalType.MINIMIZE,
-            MaxIter(1e6.toInt())
-        )
-
-        return solution.point
-    } catch (e: Exception) {
-        println("Error solving: ${e.message}")
-        return null
+    val vars = (0 until n).map { j ->
+        model.addVariable("x$j")
+            .lower(0)
+            .integer(true)
+            .weight(1.0) // objective coefficient 1 for minimisation
     }
+
+    for (i in 0 until m) {
+        val expr = model.addExpression("row$i").level(b[i])
+        for (j in 0 until n) {
+            val coef = A[i][j]
+            if (coef != 0.0) expr.set(vars[j], coef)
+        }
+    }
+
+    val res = model.minimise()
+    val state = res.state
+    if (
+        state != Optimisation.State.OPTIMAL &&
+        state != Optimisation.State.FEASIBLE &&
+        state != Optimisation.State.DISTINCT
+    ) {
+        throw IllegalStateException("No integer solution: $state")
+    }
+
+    // Extract variable values, round to nearest integer (avoid truncation), and verify Ax == b
+    // In ojAlgo 55, Result.get expects a variable index (Long)
+    val x = IntArray(n) { j ->
+        val v = vars[j]
+        val idx = try {
+            val indexField = v.javaClass.getMethod("index").invoke(v) as? Number
+                ?: v.javaClass.getMethod("getIndex").invoke(v) as? Number
+            (indexField ?: error("Variable index not available")).toLong()
+        } catch (e: Exception) {
+            vars.indexOf(v).toLong()
+        }
+        val raw = res.get(idx)
+        val d = when (raw) {
+            is Number -> raw.toDouble()
+            else -> raw.toString().toDouble()
+        }
+        d.roundToInt()
+    }
+
+    // Verify feasibility: A x == b within tiny epsilon
+    val eps = 1e-8
+    for (i in 0 until m) {
+        var lhs = 0.0
+        for (j in 0 until n) lhs += A[i][j] * x[j]
+        require(abs(lhs - b[i]) <= eps) { "Rounded solution violates row $i: lhs=$lhs rhs=${b[i]}" }
+    }
+
+    return x.sum()
 }
 
 fun <T> List<T>.generateAllPermutations(maxSize: Int = size, allowRepetition: Boolean = false): Sequence<List<T>> =

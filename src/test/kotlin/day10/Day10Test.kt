@@ -39,7 +39,7 @@ class Day10KtTest {
         """.trimIndent()
 
         val machines = parseMachines(input)
-        val fewestButtonPressesForAllMachines = machines.sumOf { it.getFewestButtonPressesForJoltageLA() }
+        val fewestButtonPressesForAllMachines = machines.sumOf { it.getFewestButtonPressesForJoltageILP() }
 
         assertThat(fewestButtonPressesForAllMachines).isEqualTo(33)
     }
@@ -52,7 +52,19 @@ class Day10KtTest {
 
         val machine = parseMachines(input).first()
 
-        assertThat(machine.getFewestButtonPressesForJoltageLA()).isEqualTo(4)
+        assertThat(machine.getFewestButtonPressesForJoltageILP()).isEqualTo(4)
+    }
+
+    @Test
+    fun `part 2 - ojAlgo DISTINCT state case`() {
+        val input = """
+            [....] (0) (1,2,3) (0,2) (1,2) {20,15,29,1}
+        """.trimIndent()
+
+        val machine = parseMachines(input).first()
+
+        // Expected unique integer solution x = (6,1,14,14); sum = 35
+        assertThat(machine.getFewestButtonPressesForJoltageILP()).isEqualTo(35)
     }
 
     @Test
@@ -60,10 +72,17 @@ class Day10KtTest {
         val input = readInput(10)
 
         val machines = parseMachines(input)
-        val fewestButtonPressesForAllMachines = machines.sumOf { it.getFewestButtonPressesForJoltageLA() }
+        val fewestButtonPressesForAllMachines = machines
+            .sumOf { try {
+                it.getFewestButtonPressesForJoltageILP()
+            } catch (e: IllegalStateException) {
+                println("Buttons: " + it.buttons.joinToString("; ") { it.joinToString() })
+                println("Joltages: " + it.joltageRequirements.joinToString())
+                throw e
+            }
+            }
 
-        // Too low: 18341
-        assertThat(fewestButtonPressesForAllMachines).isEqualTo(33)
+        assertThat(fewestButtonPressesForAllMachines).isEqualTo(18369)
     }
 }
 

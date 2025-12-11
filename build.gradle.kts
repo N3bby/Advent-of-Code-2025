@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     implementation("io.arrow-kt:arrow-core:2.2.0")
-    implementation("org.apache.commons:commons-math3:3.6.1")
+    implementation("org.ojalgo:ojalgo:55.0.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:6.0.1")
     testImplementation("org.assertj:assertj-core:3.27.6")
