@@ -76,6 +76,10 @@ sealed class Line(val pos1: Position, val pos2: Position) {
     abstract fun intersects(other: Line): Boolean
     abstract fun contains(position: Position): Boolean
 
+    fun sharesPointWith(other: Line): Boolean {
+        return pos1 == other.pos1 || pos1 == other.pos2 || pos2 == other.pos1 || pos2 == other.pos2
+    }
+
     class HorizontalLine(pos1: Position, pos2: Position) : Line(pos1, pos2) {
 
         private val minX = minOf(pos1.x, pos2.x)
@@ -86,12 +90,13 @@ sealed class Line(val pos1: Position, val pos2: Position) {
         fun getXRange(): IntRange = minX..maxX
 
         override fun intersects(other: Line): Boolean = when {
-            pos1 == other.pos1 || pos2 == other.pos2 || pos1 == other.pos2 -> false
+            sharesPointWith(other) -> false
             other is HorizontalLine -> false
             other is VerticalLine -> {
-                val intersectsHorizontally = other.x in getXRange()
+                val intersectsHorizontally = other.x in getXRange() && (other.x != maxX && other.x != minX)
                 val intersectsVertically = y in other.getYRange()
-                intersectsVertically && intersectsHorizontally
+                val intesects = intersectsVertically && intersectsHorizontally
+                intesects
             }
             else -> TODO("Not possible")
         }
@@ -111,12 +116,13 @@ sealed class Line(val pos1: Position, val pos2: Position) {
         fun getYRange(): IntRange = minY..maxY
 
         override fun intersects(other: Line): Boolean = when {
-            pos1 == other.pos1 || pos2 == other.pos2 || pos1 == other.pos2 -> false
+            sharesPointWith(other) -> false
             other is VerticalLine -> false
             other is HorizontalLine -> {
-                val intersectsVertically = other.y in getYRange()
+                val intersectsVertically = other.y in getYRange() && (other.y != maxY && other.y != minY)
                 val intersectsHorizontally = x in other.getXRange()
-                intersectsVertically && intersectsHorizontally
+                val intersects = intersectsVertically && intersectsHorizontally
+                intersects
             }
             else -> TODO("Not possible")
         }

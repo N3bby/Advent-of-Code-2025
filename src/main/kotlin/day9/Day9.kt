@@ -18,15 +18,16 @@ fun List<RedTile>.findLargestArea() = cartesianProduct(this, this)
 /** We'll *assume* a polygon with edges that don't cross over each other */
 class Polygon(corners: List<Position>) {
 
-    val xOutsideOfPolygon = corners.maxOf { it.x }
+    val xOutsideOfPolygon = corners.maxOf { it.x } + 1
 
     val edges = (corners.zipWithNext() + (corners.last() to corners.first()))
         .map { lineOf(it.first, it.second) }
 
     fun contains(position: Position): Boolean {
+        if(edges.any { it.contains(position) }) return true
+
         val ray = lineOf(position, Position(xOutsideOfPolygon, position.y))
         val intersections = edges.count { ray.intersects(it) }
-
 
         return intersections % 2 == 1
     }

@@ -27,6 +27,18 @@ class LineTest {
         val line2 = lineOf(Position(2, 0), Position(2, 2))
 
         assertThat(line1.intersects(line2)).isFalse()
+        assertThat(line2.intersects(line1)).isTrue()
+    }
+
+    @Test
+    // |
+    // |
+    // +--
+    fun intersects_whenSharingPoint_shouldBeFalse() {
+        val line1 = lineOf(Position(0, 0), Position(2, 0))
+        val line2 = lineOf(Position(0, 0), Position(0, 2))
+
+        assertThat(line1.intersects(line2)).isFalse()
         assertThat(line2.intersects(line1)).isFalse()
     }
 
@@ -39,7 +51,7 @@ class LineTest {
         val line2 = lineOf(Position(0, 0), Position(0, 2))
 
         assertThat(line1.intersects(line2)).isFalse()
-        assertThat(line2.intersects(line1)).isFalse()
+        assertThat(line2.intersects(line1)).isTrue() // Shouldn't be commutative
     }
 
     @Test
