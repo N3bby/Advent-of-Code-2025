@@ -82,7 +82,7 @@ data class Machine(
     }
 }
 
-// ojAlgo ILP helper: minimise sum(x) s.t. A x = b, x integer >= 0
+// ojAlgo ILP: minimise sum(x) s.t. A x = b, x integer >= 0
 fun fewestPressesILP(A: Array<DoubleArray>, b: DoubleArray): Int {
     val n = A[0].size
     val m = A.size
@@ -113,23 +113,9 @@ fun fewestPressesILP(A: Array<DoubleArray>, b: DoubleArray): Int {
         throw IllegalStateException("No integer solution: $state")
     }
 
-    // Extract variable values, round to nearest integer (avoid truncation), and verify Ax == b
-    // In ojAlgo 55, Result.get expects a variable index (Long)
+    // Extract variable values, round to nearest integer (avoid truncation)
     val x = IntArray(n) { j ->
-        val v = vars[j]
-        val idx = try {
-            val indexField = v.javaClass.getMethod("index").invoke(v) as? Number
-                ?: v.javaClass.getMethod("getIndex").invoke(v) as? Number
-            (indexField ?: error("Variable index not available")).toLong()
-        } catch (e: Exception) {
-            vars.indexOf(v).toLong()
-        }
-        val raw = res.get(idx)
-        val d = when (raw) {
-            is Number -> raw.toDouble()
-            else -> raw.toString().toDouble()
-        }
-        d.roundToInt()
+        res.get(j.toLong()).toDouble().roundToInt()
     }
 
     // Verify feasibility: A x == b within tiny epsilon
@@ -159,5 +145,3 @@ fun <T> List<T>.getAllPermutations(depth: Int, allowRepetition: Boolean): List<L
         remaining.getAllPermutations(depth - 1, allowRepetition).map { listOf(element) + it }
     }
 }
-
-
