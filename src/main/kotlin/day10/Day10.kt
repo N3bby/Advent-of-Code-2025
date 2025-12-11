@@ -42,35 +42,74 @@ data class Machine(
     val buttons: List<Button>,
     val joltageRequirements: List<Int>,
 ) {
-    fun applyButtonPresses(order: ButtonOrder): ReachedStateAfter? {
+
+    fun applyButtonPressesForIndicators(buttonOrder: ButtonOrder): ReachedStateAfter? {
         val state = MutableList(requiredIndicators.size) { false }
-        order.forEachIndexed { idx, button ->
+        buttonOrder.forEachIndexed { idx, button ->
             button.forEach { state[it] = !state[it] }
             if (state == requiredIndicators) return idx + 1
         }
         return null
     }
 
-    fun getFewestButtonPresses(): Int = buttons
-        .generateAllPermutations()
-        .first { applyButtonPresses(it) !== null }
-        .let { applyButtonPresses(it)!! }
-}
+    private val buttonOrderCache = mutableMapOf<ButtonOrder, List<Int>>()
 
-fun <T> List<T>.generateAllPermutations(): Sequence<List<T>> = sequence {
-    for (depth in 1..size) {
-        yieldAll(getAllPermutations(depth))
+    // I'm not sure this will work
+    // You need to sorta combine joltages from the cache with the current count
+    // And you also need to eliminate paths which you know for sure won't help anymore
+    // Maybe some sort of breadth first search where you can eliminate branches or a queue system
+    fun applyButtonPressesForJoltage(
+        fullButtonOrder: ButtonOrder,
+        buttonOrder: ButtonOrder,
+        joltages: List<Int> = MutableList(joltageRequirements.size) { 0 },
+        buttonPresses: Int = 0,
+    ): ReachedStateAfter? {
+        if (buttonOrderCache.contains(buttonOrder)) {
+
+            return buttonPresses + buttonOrderCache[fullButtonOrder]!!.indexOfFirst(joltages::contains)
+        }
+        if (buttonOrder.isEmpty()) return null
+
+        val newJoltages = joltages.toMutableList()
+        buttonOrder.first().forEach { newJoltages[it]++ }
+
+        if (newJoltages == joltageRequirements) {
+            buttonOrderCache[fullButtonOrder] = newJoltages
+            return buttonPresses + 1
+        }
+
+        val reachedAfter =
+            applyButtonPressesForJoltage(fullButtonOrder, buttonOrder.drop(1), newJoltages, buttonPresses + 1)
+        if(reachedAfter)
+        return reachedAfter
     }
+
+    fun getFewestButtonPressesForIndicators(): Int = buttons
+        .generateAllPermutations()
+        .first { applyButtonPressesForIndicators(it) !== null }
+        .let { applyButtonPressesForIndicators(it)!! }
+
+    fun getFewestButtonPressesForJoltage(): Int = buttons
+        .generateAllPermutations(Int.MAX_VALUE, true)
+        .first { applyButtonPressesForJoltage(it, it) !== null }
+        .let { applyButtonPressesForJoltage(it, it)!! }
 }
 
-fun <T> List<T>.getAllPermutations(depth: Int): List<List<T>> {
+fun <T> List<T>.generateAllPermutations(maxSize: Int = size, allowRepetition: Boolean = false): Sequence<List<T>> =
+    sequence {
+        for (depth in 1..maxSize) {
+            yieldAll(getAllPermutations(depth, allowRepetition))
+        }
+    }
+
+fun <T> List<T>.getAllPermutations(depth: Int, allowRepetition: Boolean): List<List<T>> {
     if (depth == 0) return listOf(emptyList())
     if (isEmpty()) return emptyList()
 
     return this.flatMap { element ->
-        (this - element).getAllPermutations(depth - 1).map { listOf(element) + it }
+        val remaining = if (allowRepetition) this else (this - element)
+        remaining.getAllPermutations(depth - 1, allowRepetition).map { listOf(element) + it }
     }
 }
-
 
 
