@@ -72,15 +72,7 @@ class Day10KtTest {
         val input = readInput(10)
 
         val machines = parseMachines(input)
-        val fewestButtonPressesForAllMachines = machines
-            .sumOf { try {
-                it.getFewestButtonPressesForJoltageILP()
-            } catch (e: IllegalStateException) {
-                println("Buttons: " + it.buttons.joinToString("; ") { it.joinToString() })
-                println("Joltages: " + it.joltageRequirements.joinToString())
-                throw e
-            }
-            }
+        val fewestButtonPressesForAllMachines = machines.sumOf { it.getFewestButtonPressesForJoltageILP() }
 
         assertThat(fewestButtonPressesForAllMachines).isEqualTo(18369)
     }
