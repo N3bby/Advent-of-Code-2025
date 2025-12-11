@@ -10,13 +10,15 @@ fun parseRedTiles(input: String): List<RedTile> = input
     .map { it.split(",").map(String::toInt) }
     .map { (x, y) -> Position(x, y) }
 
-fun List<RedTile>.findLargestArea() = cartesianProduct(this, this)
+fun List<RedTile>.getAllPossibleRectangles(): List<Rectangle> = cartesianProduct(this, this)
     .removeDuplicates()
     .map { Rectangle(it.first, it.second) }
+
+fun List<RedTile>.findLargestArea() = getAllPossibleRectangles()
     .maxOf { it.area }
 
 /** We'll *assume* a polygon with edges that don't cross over each other */
-class Polygon(corners: List<Position>) {
+class Polygon(private val corners: List<Position>) {
 
     val xOutsideOfPolygon = corners.maxOf { it.x } + 1
 
@@ -24,7 +26,7 @@ class Polygon(corners: List<Position>) {
         .map { lineOf(it.first, it.second) }
 
     fun contains(position: Position): Boolean {
-        if(edges.any { it.contains(position) }) return true
+        if (edges.any { it.contains(position) }) return true
 
         val ray = lineOf(position, Position(xOutsideOfPolygon, position.y))
         val intersections = edges.count { ray.intersects(it) }
@@ -35,5 +37,12 @@ class Polygon(corners: List<Position>) {
     fun intersects(line: Line): Boolean {
         return edges.any { edge -> line.intersects(edge) }
     }
+
+    fun findFullyContainedRectangles(rectangles: List<Rectangle>): List<Rectangle> = rectangles
+        .parallelStream()
+        .filter { rectangle -> rectangle.allCorners.all { this.contains(it) } }
+        .filter { rectangle -> this.corners.none { rectangle.contains(it) } }
+        .filter { rectangle -> rectangle.edges.none { this.intersects(it) } }
+        .toList()
 
 }

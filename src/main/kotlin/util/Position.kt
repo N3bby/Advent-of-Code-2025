@@ -87,17 +87,17 @@ sealed class Line(val pos1: Position, val pos2: Position) {
 
         val y = pos1.y
 
-        fun getXRange(): IntRange = minX..maxX
+        fun getXRange(): IntRange = minX + 1..<maxX
 
         override fun intersects(other: Line): Boolean = when {
             sharesPointWith(other) -> false
             other is HorizontalLine -> false
             other is VerticalLine -> {
-                val intersectsHorizontally = other.x in getXRange() && (other.x != maxX && other.x != minX)
+                val intersectsHorizontally = other.x in getXRange()
                 val intersectsVertically = y in other.getYRange()
-                val intesects = intersectsVertically && intersectsHorizontally
-                intesects
+                intersectsVertically && intersectsHorizontally
             }
+
             else -> TODO("Not possible")
         }
 
@@ -113,17 +113,17 @@ sealed class Line(val pos1: Position, val pos2: Position) {
 
         val x = pos1.x
 
-        fun getYRange(): IntRange = minY..maxY
+        fun getYRange(): IntRange = minY + 1..<maxY
 
         override fun intersects(other: Line): Boolean = when {
             sharesPointWith(other) -> false
             other is VerticalLine -> false
             other is HorizontalLine -> {
-                val intersectsVertically = other.y in getYRange() && (other.y != maxY && other.y != minY)
+                val intersectsVertically = other.y in getYRange()
                 val intersectsHorizontally = x in other.getXRange()
-                val intersects = intersectsVertically && intersectsHorizontally
-                intersects
+                intersectsVertically && intersectsHorizontally
             }
+
             else -> TODO("Not possible")
         }
 
@@ -158,6 +158,15 @@ data class Rectangle(val corner1: Position, val corner2: Position) {
             val (width, height) = (corner1 - corner2).abs() + Offset(1, 1)
             return width.toLong() * height.toLong()
         }
+
+    fun contains(position: Position): Boolean {
+        val minX = minOf(corner1.x, corner2.x)
+        val maxX = maxOf(corner1.x, corner2.x)
+        val minY = minOf(corner1.y, corner2.y)
+        val maxY = maxOf(corner1.y, corner2.y)
+
+        return position.x in minX + 1..<maxX && position.y in minY + 1..<maxY
+    }
 
 }
 

@@ -27,7 +27,19 @@ class LineTest {
         val line2 = lineOf(Position(2, 0), Position(2, 2))
 
         assertThat(line1.intersects(line2)).isFalse()
-        assertThat(line2.intersects(line1)).isTrue()
+        assertThat(line2.intersects(line1)).isFalse()
+    }
+
+    @Test
+    // -+-
+    //  |
+    //  |
+    fun intersects_start_vertical_shouldBeFalse() {
+        val horizontalLine = lineOf(Position(0, 0), Position(2, 0))
+        val verticalLine = lineOf(Position(1, 0), Position(1, 2))
+
+        assertThat(horizontalLine.intersects(verticalLine)).isFalse()
+        assertThat(verticalLine.intersects(horizontalLine)).isFalse()
     }
 
     @Test
@@ -51,7 +63,7 @@ class LineTest {
         val line2 = lineOf(Position(0, 0), Position(0, 2))
 
         assertThat(line1.intersects(line2)).isFalse()
-        assertThat(line2.intersects(line1)).isTrue() // Shouldn't be commutative
+        assertThat(line2.intersects(line1)).isFalse()
     }
 
     @Test
